@@ -2,8 +2,9 @@
 //!
 //! Providers live under `providers.<id>`; OpenAI-compatible ones have
 //! `"type": "openai-compat"`. `models` is an *array* of objects with many
-//! required fields, but `/models` only returns ids, so new entries get the
-//! defaults below.
+//! required fields, but `/models` only returns ids, so only `id`/`name` are
+//! written. Everything else (cost, context window, capabilities, ...) is left
+//! unset so the user can fill in real values instead of fabricated defaults.
 
 use std::path::PathBuf;
 
@@ -16,10 +17,6 @@ use crate::config::{remove_field, set_field, text};
 pub struct Crush;
 
 const COMPAT_TYPE: &str = "openai-compat";
-
-/// `/models` does not report these, so they are fixed placeholders users can edit afterwards.
-const DEFAULT_CONTEXT_WINDOW: u64 = 128_000;
-const DEFAULT_MAX_TOKENS: u64 = 4_096;
 
 impl Agent for Crush {
     fn name(&self) -> &'static str {
@@ -96,20 +93,8 @@ fn config_dir() -> Option<PathBuf> {
 }
 
 fn model(id: &str) -> CstInputValue {
-    let number = |n: u64| CstInputValue::Number(n.to_string());
     CstInputValue::Object(vec![
         ("id".to_owned(), text(id)),
         ("name".to_owned(), text(id)),
-        ("cost_per_1m_in".to_owned(), number(0)),
-        ("cost_per_1m_out".to_owned(), number(0)),
-        ("cost_per_1m_in_cached".to_owned(), number(0)),
-        ("cost_per_1m_out_cached".to_owned(), number(0)),
-        ("context_window".to_owned(), number(DEFAULT_CONTEXT_WINDOW)),
-        ("default_max_tokens".to_owned(), number(DEFAULT_MAX_TOKENS)),
-        ("can_reason".to_owned(), CstInputValue::Bool(false)),
-        (
-            "supports_attachments".to_owned(),
-            CstInputValue::Bool(false),
-        ),
     ])
 }
