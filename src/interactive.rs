@@ -1,11 +1,17 @@
 //! Interactive flows built on `cliclack`.
-//!
 //! These only collect input and present results; the actual work is done by the
 //! shared operations in [`crate::commands`]. Every action reloads the config
 //! from disk, so the menus always reflect the file's current state.
 //!
 //! Flow: `browse` (provider picker) -> `manage` (one provider's menu). Removing a
 //! provider returns to the picker; only "Exit" leaves the app.
+//!
+//! cliclack 0.5 features used:
+//! - [`cliclack::select`] with `filter_mode` (fuzzy search) and `max_rows` (scrolling)
+//! - [`cliclack::input`] with `validate_interactively` and `autocomplete`
+//! - [`cliclack::spinner`] and `log::{warning, info, success}` for styled messages
+//!
+//! a custom [`crate::ui::BrandTheme`] via [`cliclack::set_theme`]
 
 use std::fmt::Display;
 
@@ -13,7 +19,7 @@ use crate::{
     agent::Provider,
     commands::{self, Ctx, KeyChange, SetChanges},
     error::Error,
-    ui::{self, prompt},
+    ui::{self, apply_theme, prompt},
     validate,
 };
 
@@ -51,6 +57,7 @@ enum KeyAction {
 /// `llm-provider-sync <agent>`: pick a provider (or add one) and manage it.
 pub fn run_agent(ctx: &Ctx) -> anyhow::Result<()> {
     ui::require_interactive()?;
+    apply_theme();
     prompt(cliclack::intro(title(ctx)))?;
     browse(ctx)?;
     prompt(cliclack::outro("Done"))?;
@@ -60,6 +67,7 @@ pub fn run_agent(ctx: &Ctx) -> anyhow::Result<()> {
 /// `llm-provider-sync <agent> <id>`: manage the provider, or offer to create it.
 pub fn run_provider(ctx: &Ctx, id: &str) -> anyhow::Result<()> {
     ui::require_interactive()?;
+    apply_theme();
     prompt(cliclack::intro(title(ctx)))?;
 
     if ctx.load()?.contains(id) {
@@ -90,19 +98,24 @@ fn title(ctx: &Ctx) -> String {
 fn browse(ctx: &Ctx) -> anyhow::Result<()> {
     loop {
         let providers = ctx.load()?.providers();
-        let mut menu = cliclack::select::<Choice>("Provider");
-        for provider in &providers {
-            menu = menu.item(
-                Choice::Provider(provider.id.clone()),
-                &provider.id,
-                &provider.base_url,
-            );
-        }
-        let choice = prompt(
-            menu.item(Choice::Add, "+ Add new provider", "")
-                .item(Choice::Exit, "Exit", "")
-                .interact(),
-        )?;
+        let items: Vec<(Choice, String, String)> = providers
+            .iter()
+            .map(|provider| {
+                (
+                    Choice::Provider(provider.id.clone()),
+                    provider.id.clone(),
+                    provider.base_url.clone(),
+                )
+            })
+            .collect();
+        let mut menu = cliclack::select::<Choice>("Provider")
+            .filter_mode()
+            .max_rows(10)
+            .items(&items);
+        menu = menu
+            .item(Choice::Add, "+ Add new provider", "")
+            .item(Choice::Exit, "Exit", "");
+        let choice = prompt(menu.interact())?;
 
         match choice {
             Choice::Provider(id) => {
@@ -162,6 +175,13 @@ fn manage(ctx: &Ctx, id: &str) -> anyhow::Result<Flow> {
                 prompt(cliclack::note("Models", models))?;
             }
             Action::Remove => {
+                let doc = ctx.load()?;
+                let refs = doc.reference_count(&id);
+                if refs > 0 {
+                    prompt(cliclack::log::warning(format!(
+                        "`{id}` is referenced by {refs} model setting(s); they will be left dangling."
+                    )))?;
+                }
                 if commands::remove(ctx, &id)? {
                     prompt(cliclack::log::success(format!("Removed `{id}`")))?;
                     return Ok(Flow::Back);
@@ -175,15 +195,34 @@ fn manage(ctx: &Ctx, id: &str) -> anyhow::Result<Flow> {
 /// Prompts for new values (prefilled with the current ones). Returns the provider's id afterwards,
 /// or `None` if nothing changed or the update failed.
 fn edit(ctx: &Ctx, current: &Provider) -> anyhow::Result<Option<String>> {
+    let other_ids: Vec<String> = ctx
+        .load()?
+        .providers()
+        .iter()
+        .map(|provider| provider.id.clone())
+        .filter(|id| id != &current.id)
+        .collect();
+
     let id: String = prompt(
         cliclack::input("Provider id")
             .default_input(&current.id)
+            .autocomplete(other_ids)
+            .validate_interactively(|value: &String| {
+                validate::provider_id(value)
+                    .map(|_| ())
+                    .map_err(|err| err.to_string())
+            })
             .validate(|value: &String| validate::provider_id(value).map(|_| ()))
             .interact(),
     )?;
     let base_url: String = prompt(
         cliclack::input("Base URL")
             .default_input(&current.base_url)
+            .validate_interactively(|value: &String| {
+                validate::base_url(value)
+                    .map(|_| ())
+                    .map_err(|err| err.to_string())
+            })
             .validate(|value: &String| validate::base_url(value).map(|_| ()))
             .interact(),
     )?;
@@ -234,6 +273,11 @@ fn create(ctx: &Ctx, id: &str) -> anyhow::Result<()> {
         let base_url: String = prompt(
             cliclack::input("Base URL")
                 .placeholder("http://localhost:1234/v1")
+                .validate_interactively(|value: &String| {
+                    validate::base_url(value)
+                        .map(|_| ())
+                        .map_err(|err| err.to_string())
+                })
                 .validate(|value: &String| validate::base_url(value).map(|_| ()))
                 .interact(),
         )?;

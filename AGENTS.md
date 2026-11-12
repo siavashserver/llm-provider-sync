@@ -46,8 +46,9 @@ runtime.
 
 | Crate                           | Used for                                                       |
 | ------------------------------- | -------------------------------------------------------------- |
-| `clap` (derive, env)            | CLI grammar, help, `--api-key` env fallback                    |
-| `cliclack`                      | Interactive prompts, spinners, notes                           |
+| `clap` (derive, env)            | CLI grammar, help, `--api-key` env fallback                                                |
+| `cliclack`                      | Interactive prompts, spinners, progress bars, multiselect, themed notes and logs           |
+| `console`                       | Brand theme colors for cliclack UI                                                         |
 | `reqwest` (blocking, rustls)    | `GET {base_url}/models`                                        |
 | `serde_json`                    | Reading config values, `/models` responses, JSON output        |
 | `jsonc-parser` (`cst`, `serde`) | Parsing JSONC; editing it while preserving comments and layout |

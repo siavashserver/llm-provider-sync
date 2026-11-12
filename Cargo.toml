@@ -9,6 +9,7 @@ description = "Manage OpenAI-compatible model providers and sync their models in
 anyhow = "1"
 clap = { version = "4", features = ["derive", "env"] }
 cliclack = "0.5"
+console = "0.16"
 directories = "6"
 jsonc-parser = { version = "0.34", features = ["cst", "serde"] }
 # Blocking client: the CLI is strictly sequential, so no async runtime is needed.

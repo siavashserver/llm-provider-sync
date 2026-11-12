@@ -2,7 +2,24 @@
 
 use std::io::{self, IsTerminal};
 
+use cliclack::{Theme, ThemeState};
+use console::Style;
+
 use crate::error::Error;
+
+/// Branded cliclack theme: blue sidebar/symbols, green on submit.
+pub struct BrandTheme;
+
+impl Theme for BrandTheme {
+    fn bar_color(&self, _state: &ThemeState) -> Style {
+        Style::new().blue()
+    }
+}
+
+/// Applies the branded cliclack theme. Call once at the start of an interactive run.
+pub fn apply_theme() {
+    cliclack::set_theme(BrandTheme);
+}
 
 /// Prompts need a real terminal on both ends.
 pub fn is_interactive() -> bool {
