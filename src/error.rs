@@ -64,8 +64,8 @@ impl Error {
             | Self::Parse { .. }
             | Self::NotObject(_) => 3,
             Self::InvalidId(_) | Self::InvalidUrl(_) | Self::Probe(_) | Self::SyncFailed(_) => 4,
-            Self::ProviderNotFound(_) | Self::NotCompatible(_) => 5,
-            Self::ProviderExists(_) | Self::Ui(_) => 1,
+            Self::ProviderNotFound(_) | Self::NotCompatible(_) | Self::ProviderExists(_) => 5,
+            Self::Ui(_) => 1,
             Self::Cancelled => 130,
         }
     }
