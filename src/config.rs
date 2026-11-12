@@ -379,10 +379,10 @@ mod tests {
             r#"{
               // selected model
               "model": "lm/a",
-              "provider": {
+              "providers": {
                 "lm": {
-                  "npm": "@ai-sdk/openai-compatible",
-                  "options": { "baseURL": "http://localhost:1234/v1" },
+                  "package": "@ai-sdk/openai-compatible",
+                  "settings": { "baseURL": "http://localhost:1234/v1" },
                   "models": { "a": {} }
                 }
               }

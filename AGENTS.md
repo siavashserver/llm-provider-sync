@@ -119,9 +119,9 @@ How it fits together:
 
 |                                                 | Crush                                                                                             | Kilo Code                                                                                          |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| Schema                                          | https://charm.land/crush.json                                                                     | https://app.kilo.ai/config.json                                                                    |
+| Schema                                          | https://charm.land/crush.json                                                                     | https://app.kilo.ai/config.json                                                                   |
 | Global file                                     | `$XDG_CONFIG_HOME` or `~/.config` + `crush/crush.json`; Windows `%LOCALAPPDATA%\crush\crush.json` | `~/.config/kilo/` + first existing of `kilo.jsonc`, `kilo.json`, `opencode.jsonc`, `opencode.json` |
-| Provider block                                  | `providers.<id>`                                                                                  | `provider.<id>`                                                                                    |
+| Provider block                                  | `providers.<id>`                                                                                  | `providers.<id>`                                                                                   |
 | OpenAI-compatible when                          | `type == "openai-compat"`                                                                         | `npm == "@ai-sdk/openai-compatible"`                                                               |
 | URL / key                                       | `base_url`, `api_key`                                                                             | `options.baseURL`, `options.apiKey`                                                                |
 | Models                                          | array of objects (many required fields, filled with defaults)                                     | map keyed by model id: `{ "<id>": { "name": "<id>" } }`                                            |
@@ -130,8 +130,8 @@ How it fits together:
 API keys are stored verbatim. Environment references (`$VAR`, `${VAR}`,
 `{env:VAR}`) are kept as written and resolved only when probing.
 
-Kilo note: entries in the newer `providers` block are ignored; this tool targets
-the `provider` block, which documents `options.baseURL` and `options.apiKey`.
+Kilo note: this tool targets the `providers` block, which documents
+`package`, `settings.baseURL` and `settings.apiKey`.
 
 ## Conventions and best practices
 

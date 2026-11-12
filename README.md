@@ -96,7 +96,7 @@ Global flags work everywhere:
 
 | Agent                  | Where providers live | Config locations                                                                 |
 | ---------------------- | -------------------- | -------------------------------------------------------------------------------- |
-| Kilo Code (`kilocode`) | `provider.<id>`      | `~/.config/kilo/` — `kilo.jsonc`, `kilo.json`, `opencode.jsonc`, `opencode.json` |
+| Kilo Code (`kilocode`) | `providers.<id>`      | `~/.config/kilo/` — `kilo.jsonc`, `kilo.json`, `opencode.jsonc`, `opencode.json` |
 | Crush (`crush`)        | `providers.<id>`     | `$XDG_CONFIG_HOME/crush/crush.json` (Windows: `%LOCALAPPDATA%\crush\crush.json`) |
 
 Use `--config <PATH>` if your config lives somewhere unusual.
