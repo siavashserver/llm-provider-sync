@@ -27,8 +27,6 @@ use crate::{
 enum Flow {
     /// Go back to the provider picker.
     Back,
-    /// Leave the app.
-    Quit,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -37,7 +35,7 @@ enum Action {
     Edit,
     Models,
     Remove,
-    Exit,
+    Back,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -71,9 +69,8 @@ pub fn run_provider(ctx: &Ctx, id: &str) -> anyhow::Result<()> {
     prompt(cliclack::intro(title(ctx)))?;
 
     if ctx.load()?.contains(id) {
-        if let Flow::Back = manage(ctx, id)? {
-            browse(ctx)?;
-        }
+        manage(ctx, id)?;
+        browse(ctx)?;
     } else {
         let create_it = prompt(
             cliclack::confirm(format!("Provider `{id}` not found. Create it?"))
@@ -114,14 +111,12 @@ fn browse(ctx: &Ctx) -> anyhow::Result<()> {
             .items(&items);
         menu = menu
             .item(Choice::Add, "+ Add new provider", "")
-            .item(Choice::Exit, "Exit", "");
+            .item(Choice::Exit, "← Exit", "");
         let choice = prompt(menu.interact())?;
 
         match choice {
             Choice::Provider(id) => {
-                if let Flow::Quit = manage(ctx, &id)? {
-                    return Ok(());
-                }
+                manage(ctx, &id)?;
             }
             Choice::Add => {
                 let id: String = prompt(
@@ -153,7 +148,7 @@ fn manage(ctx: &Ctx, id: &str) -> anyhow::Result<Flow> {
                 .item(Action::Edit, "Edit provider", "")
                 .item(Action::Models, "Show models", "")
                 .item(Action::Remove, "Remove provider", "")
-                .item(Action::Exit, "Exit", "")
+                .item(Action::Back, "← Back", "")
                 .interact(),
         )?;
 
@@ -187,7 +182,7 @@ fn manage(ctx: &Ctx, id: &str) -> anyhow::Result<Flow> {
                     return Ok(Flow::Back);
                 }
             }
-            Action::Exit => return Ok(Flow::Quit),
+            Action::Back => return Ok(Flow::Back),
         }
     }
 }
