@@ -1,9 +1,17 @@
 [package]
+authors = ["Siavash Eliasi"]
 name = "llm-provider-sync"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 description = "Manage OpenAI-compatible model providers and sync their models into AI agent configs"
+repository = "https://github.com/siavashserver/llm-provider-sync.git"
+
+[package.metadata.wix]
+upgrade-guid = "A626C6F9-6234-49F9-BFDB-0CA294781766"
+path-guid = "260DCDC9-EEAD-4B8D-8631-848F317429B4"
+license = false
+eula = false
 
 [dependencies]
 anyhow = "1"
@@ -28,3 +36,8 @@ all = { level = "warn", priority = -1 }
 lto = true
 codegen-units = 1
 strip = true
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = true
