@@ -124,7 +124,7 @@ arguments end up in your shell history.
 
 ## Under the hood
 
-The full lives in [AGENTS.md](./AGENTS.md).
+The full technical details lives in [AGENTS.md](./AGENTS.md).
 
 ## License
 
