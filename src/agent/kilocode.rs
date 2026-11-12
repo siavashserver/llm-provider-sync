@@ -1,8 +1,9 @@
 //! Kilo Code (https://app.kilo.ai/config.json, an opencode-style config).
 //!
-//! Providers live under `providers.<id>`; OpenAI-compatible ones use the
-//! `@ai-sdk/openai-compatible` package. `settings.baseURL` / `settings.apiKey`
-//! carry the endpoint and key. `models` is a *map* keyed by model id.
+//! Providers live under `provider.<id>` (the deprecated-but-documented block that
+//! carries `options.baseURL` / `options.apiKey`). OpenAI-compatible ones use the
+//! `@ai-sdk/openai-compatible` package. `models` is a *map* keyed by model id.
+//! Entries under the newer `providers` block are not touched.
 
 use std::path::PathBuf;
 
@@ -36,21 +37,21 @@ impl Agent for Kilocode {
     }
 
     fn providers_key(&self) -> &'static str {
-        "providers"
+        "provider"
     }
 
     fn read_provider(&self, id: &str, entry: &Value) -> Option<Provider> {
-        if str_field(entry, "package")? != COMPAT_PACKAGE {
+        if str_field(entry, "npm")? != COMPAT_PACKAGE {
             return None;
         }
-        let settings = entry.get("settings");
+        let options = entry.get("options");
         Some(Provider {
             id: id.to_owned(),
-            base_url: settings
+            base_url: options
                 .and_then(|o| str_field(o, "baseURL"))
                 .unwrap_or_default()
                 .to_owned(),
-            api_key: settings
+            api_key: options
                 .and_then(|o| str_field(o, "apiKey"))
                 .map(str::to_owned),
             models: entry
@@ -64,13 +65,13 @@ impl Agent for Kilocode {
     }
 
     fn write_provider(&self, entry: &CstObject, provider: &Provider, models: Option<&[String]>) {
-        set_field(entry, "package", text(COMPAT_PACKAGE));
+        set_field(entry, "npm", text(COMPAT_PACKAGE));
 
-        let settings = entry.object_value_or_set("settings");
-        set_field(&settings, "baseURL", text(&provider.base_url));
+        let options = entry.object_value_or_set("options");
+        set_field(&options, "baseURL", text(&provider.base_url));
         match &provider.api_key {
-            Some(key) => set_field(&settings, "apiKey", text(key)),
-            None => remove_field(&settings, "apiKey"),
+            Some(key) => set_field(&options, "apiKey", text(key)),
+            None => remove_field(&options, "apiKey"),
         }
 
         if let Some(ids) = models {
@@ -79,10 +80,7 @@ impl Agent for Kilocode {
                 .map(|id| {
                     (
                         id.clone(),
-                        CstInputValue::Object(vec![
-                            ("modelID".to_owned(), text(id)),
-                            ("name".to_owned(), text(id)),
-                        ]),
+                        CstInputValue::Object(vec![("name".to_owned(), text(id))]),
                     )
                 })
                 .collect();
