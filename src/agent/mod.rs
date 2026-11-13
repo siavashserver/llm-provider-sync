@@ -6,9 +6,8 @@
 mod crush;
 mod kilocode;
 
-use std::{env, path::PathBuf};
+use std::path::PathBuf;
 
-use directories::BaseDirs;
 use jsonc_parser::cst::CstObject;
 use serde_json::Value;
 
@@ -66,13 +65,16 @@ pub trait Agent {
     fn reference_paths(&self, config: &Value) -> Vec<Vec<String>>;
 }
 
-/// `$XDG_CONFIG_HOME` or `~/.config`. These tools use this location on every OS
-/// except where an adapter says otherwise.
+/// Platform-appropriate user config directory: `~/.config` on every OS.
+/// Resolved via `directories::BaseDirs::home_dir()` so the result matches the
+/// locations Crush and Kilo Code actually use on disk (including macOS, where
+/// `BaseDirs::config_dir()` would return `~/Library/Application Support` instead
+/// of `~/.config`, and Windows, where it would return `%APPDATA%` instead of
+/// `%USERPROFILE%\.config`). These tools use this location on every OS except
+/// where an adapter says otherwise.
 fn config_home() -> Option<PathBuf> {
-    env::var_os("XDG_CONFIG_HOME")
-        .map(PathBuf::from)
-        .filter(|path| path.is_absolute())
-        .or_else(|| BaseDirs::new().map(|dirs| dirs.home_dir().join(".config")))
+    directories::BaseDirs::new()
+        .map(|dirs| dirs.home_dir().join(".config"))
 }
 
 fn str_field<'a>(value: &'a Value, key: &str) -> Option<&'a str> {
